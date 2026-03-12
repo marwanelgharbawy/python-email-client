@@ -1,6 +1,8 @@
 import smtplib
+import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from dotenv import load_dotenv
 
 # function to send email, takes parameters from user
 def send_email(sender_email, sender_password, recipient_email, subject, body):
@@ -26,10 +28,12 @@ def send_email(sender_email, sender_password, recipient_email, subject, body):
     s.quit()
     
 if __name__ == "__main__":
-    sender_email = input("Enter your email address: ")
-    sender_password = input("Enter your email password: ")
-    recipient_email = input("Enter recipient's email address: ")
-    subject = "Testing my code"
-    body = "Ramadan Mubarak!!"
+    load_dotenv()
+    
+    sender_email = os.getenv("EMAIL_ADDRESS")
+    sender_password = os.getenv("EMAIL_PASSWORD")
+    recipient_email = os.getenv("RECIPIENT_EMAIL")
+    subject = "This is an email"
+    body = "Good day!\n\nKindly note that this is an email,\n\nBest regards."
     
     send_email(sender_email, sender_password, recipient_email, subject, body)

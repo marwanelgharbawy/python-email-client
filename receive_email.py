@@ -25,6 +25,7 @@ def get_connection(email_address, password):
 
 def fetch_latest_email(con):
     try:
+        con.select("Inbox")
         status, messages = con.search(None, 'ALL')
         mail_ids = messages[0].split()
         if mail_ids:

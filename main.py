@@ -3,6 +3,8 @@ from tkinter import messagebox
 from send_email import send_email
 from receive_email import fetch_latest_email, get_connection
 from plyer import notification
+import threading
+import time
 
 user_email = None
 user_password = None
@@ -54,27 +56,27 @@ def receive():
     else:
         messagebox.showerror("Error", "Failed to fetch latest email.")
         
-def poll_emails(window):
-    global latest_email
+# def poll_emails(window):
+#     global latest_email
     
-    current_email = fetch_latest_email(con)
-    print("Checking for new emails NOW.")
+#     current_email = fetch_latest_email(con)
+#     print("Checking for new emails NOW.")
     
-    # check if a new email arrived by comparing with the stored one
-    if current_email and current_email != latest_email:
-        latest_email = current_email
+#     # check if a new email arrived by comparing with the stored one
+#     if current_email and current_email != latest_email:
+#         latest_email = current_email
         
-        print("Notifying!")
+#         print("Notifying!")
         
-        notification.notify(
-            title=f"New Email: {latest_email['subject']}",
-            message=f"From: {latest_email['from']}",
-            app_name="Email Client",
-            timeout=10
-        )
+#         notification.notify(
+#             title=f"New Email: {latest_email['subject']}",
+#             message=f"From: {latest_email['from']}",
+#             app_name="Email Client",
+#             timeout=10
+#         )
         
-    # schedule this function to run again periodically
-    window.after(10000, lambda: poll_emails(window))
+#     # schedule this function to run again periodically
+#     window.after(10000, lambda: poll_emails(window))
 
 def open_main_window():
     global recipient_entry, subject_entry, body_text
@@ -105,7 +107,7 @@ def open_main_window():
     receive_button = tk.Button(main_window, text="Receive Latest Email", command=receive)
     receive_button.pack(pady=5, padx=10, anchor="w")
     
-    poll_emails(main_window)
+    start_polling_thread()
 
 def on_closing():
     global con
@@ -115,6 +117,35 @@ def on_closing():
         except:
             pass
     login_window.destroy()
+    
+def start_polling_thread():
+    thread = threading.Thread(target=background_poll, daemon=True) # ensures the thread dies when the main program closes
+    thread.start()
+
+def background_poll():
+    global latest_email, con
+    while True:
+        print("Checking for new emails NOW.")
+        if con:
+            try:
+                current_email = fetch_latest_email(con)
+                
+                if current_email and current_email != latest_email:
+                    latest_email = current_email
+                    
+                    print("Notifying!")
+                    
+                    notification.notify(
+                        title=f"New Email: {latest_email['subject']}",
+                        message=f"From: {latest_email['from']}",
+                        app_name="Email Client",
+                        timeout=10
+                    )
+            except Exception as e:
+                print(f"Polling error: {e}")
+        
+        # wait 10 seconds before checking again
+        time.sleep(10)
 
 # login window
 login_window = tk.Tk() # first window to start with

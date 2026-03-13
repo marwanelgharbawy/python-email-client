@@ -3,6 +3,18 @@ from tkinter import messagebox
 from send_email import send_email
 from receive_email import fetch_latest_email
 
+def login():
+    global user_email, user_password
+    if email_entry.get() and password_entry.get():
+        user_email = email_entry.get()
+        user_password = password_entry.get()
+        
+        # Hide login window and open main dashboard
+        login_window.withdraw()
+        open_main_window()
+    else:
+        messagebox.showwarning("Missing Information", "Please enter your email and password.")
+
 def send():
     if email_entry.get() and password_entry.get() and recipient_entry.get() and body_text.get("1.0", tk.END).strip():
         
@@ -29,39 +41,49 @@ def receive():
     else:
         messagebox.showwarning("Missing Information", "Please enter your email and password to receive emails.")
 
-# Main window setup
-root = tk.Tk()
-root.title("Email Client")
-root.geometry("400x500")
+def open_main_window():
+    global recipient_entry, subject_entry, body_text
+    
+    main_window = tk.Toplevel() # seconday window for email functionality
+    main_window.title("Welcome!")
+    main_window.geometry("400x500")
+    
+    # close the entire app when secondary window is closed
+    main_window.protocol("WM_DELETE_WINDOW", login_window.destroy)
 
-# input fields
-# email and password
-tk.Label(root, text="Your Email:").pack(pady=2)
-email_entry = tk.Entry(root, width=40)
-email_entry.pack(pady=2)
+    # email sending form
+    tk.Label(main_window, text="Recipient Email:").pack(pady=(10, 2), padx=10, anchor="w")
+    recipient_entry = tk.Entry(main_window, width=40)
+    recipient_entry.pack(pady=2, padx=10, anchor="w")
 
-tk.Label(root, text="Password:").pack(pady=2)
-password_entry = tk.Entry(root, width=40, show="*")
-password_entry.pack(pady=2)
+    tk.Label(main_window, text="Subject:").pack(pady=2, padx=10, anchor="w")
+    subject_entry = tk.Entry(main_window, width=40)
+    subject_entry.pack(pady=2, padx=10, anchor="w")
 
-# email details
-tk.Label(root, text="Recipient Email:").pack(pady=2)
-recipient_entry = tk.Entry(root, width=40)
-recipient_entry.pack(pady=2)
+    tk.Label(main_window, text="Body:").pack(pady=2, padx=10, anchor="w")
+    body_text = tk.Text(main_window, width=45, height=15)
+    body_text.pack(pady=2, padx=10, anchor="w")
 
-tk.Label(root, text="Subject:").pack(pady=2)
-subject_entry = tk.Entry(root, width=40)
-subject_entry.pack(pady=2)
+    send_button = tk.Button(main_window, text="Send Email", command=send)
+    send_button.pack(pady=5, padx=10, anchor="w")
 
-tk.Label(root, text="Body:").pack(pady=2)
-body_text = tk.Text(root, width=40, height=10)
-body_text.pack(pady=2)
+    receive_button = tk.Button(main_window, text="Receive Latest Email", command=receive)
+    receive_button.pack(pady=5, padx=10, anchor="w")
 
-# buttons
-send_button = tk.Button(root, text="Send Email", command=send)
-send_button.pack(pady=5)
+# login window
+login_window = tk.Tk() # first window to start with
+login_window.title("Login")
+login_window.geometry("300x200")
 
-receive_button = tk.Button(root, text="Receive Latest Email", command=receive)
-receive_button.pack(pady=5)
+tk.Label(login_window, text="Email:").pack(pady=(20, 2), padx=10, anchor="w")
+email_entry = tk.Entry(login_window, width=35)
+email_entry.pack(pady=2, padx=10, anchor="w")
 
-root.mainloop()
+tk.Label(login_window, text="Password:").pack(pady=2, padx=10, anchor="w")
+password_entry = tk.Entry(login_window, width=35, show="*")
+password_entry.pack(pady=2, padx=10, anchor="w")
+
+login_button = tk.Button(login_window, text="Login", command=login)
+login_button.pack(pady=15, padx=10, anchor="w")
+
+login_window.mainloop()

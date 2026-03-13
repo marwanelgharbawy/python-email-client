@@ -41,16 +41,12 @@ def fetch_latest_email(con):
                         'body': get_body(msg)
                     }
         return None
+    except imaplib.IMAP4.error as e:
+        print(f"IMAP Error: Authentication failed or server issue. {e}")
+        return None
     except Exception as e:
         print(f"Error fetching: {e}")
         return None
-
-    except imaplib.IMAP4.error as e:
-        print(f"IMAP Error: Authentication failed or server issue. {e}")
-        return False
-    except Exception as e:
-        print(f"An error occurred while connecting: {e}")
-        return False
 
 if __name__ == "__main__":
     load_dotenv()
@@ -58,7 +54,12 @@ if __name__ == "__main__":
     email_address = os.getenv("RECIPIENT_ADDRESS")
     email_password = os.getenv("RECIPIENT_PASSWORD")
     
-    if fetch_latest_email(email_address, email_password):
-        print("\nEmail fetching process completed.")
-    else:
-        print("Failed to fetch emails.")
+    con = get_connection(email_address, email_password)
+    
+    if con:
+        print("Connection successful.")     
+        if fetch_latest_email(con):
+            print("\nEmail fetching process completed.")
+        else:
+            print("Failed to fetch emails.")
+        

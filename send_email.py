@@ -30,9 +30,9 @@ def send_email(sender_email, sender_password, recipient_email, subject, body):
 if __name__ == "__main__":
     load_dotenv()
     
-    sender_email = os.getenv("EMAIL_ADDRESS")
-    sender_password = os.getenv("EMAIL_PASSWORD")
-    recipient_email = os.getenv("RECIPIENT_EMAIL")
+    sender_email = os.getenv("SENDER_EMAIL")
+    sender_password = os.getenv("SENDER_PASSWORD")
+    recipient_email = os.getenv("RECIPIENT_ADDRESS")
     subject = "This is an email"
     body = "Good day!\n\nKindly note that this is an email,\n\nBest regards."
     

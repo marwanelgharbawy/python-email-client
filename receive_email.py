@@ -38,12 +38,19 @@ def fetch_latest_email(email_address, password):
                     print(f"From: {msg['From']}")
                     print(f"Subject: {msg['Subject']}")
                     print(f"Body:\n{get_body(msg)}")
+                    
+                    # dictionary for GUI
+                    email_data = {
+                        'from': msg['From'],
+                        'subject': msg['Subject'],
+                        'body': get_body(msg)
+                    }
         else:
             print("No emails found.")
         
         con.close()
         con.logout()
-        return True
+        return email_data
 
     except imaplib.IMAP4.error as e:
         print(f"IMAP Error: Authentication failed or server issue. {e}")

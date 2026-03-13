@@ -5,11 +5,12 @@ from email.header import decode_header
 from re import search
 from dotenv import load_dotenv
 
-# def get_body(msg):
-#     if msg.is_multipart():
-#         return get_body(msg.get_payload(0))
-#     else:
-#         return msg.get_payload(None, True)
+def get_body(msg):
+    if msg.is_multipart():
+        body = msg.get_payload(0).get_payload(decode=True).decode(errors='ignore')
+    else:
+        body = msg.get_payload(decode=True).decode(errors='ignore')
+    return body
 
 def fetch_latest_email(email_address, password):
     try:   
@@ -34,16 +35,11 @@ def fetch_latest_email(email_address, password):
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
                     
-                    if msg.is_multipart():
-                        body = msg.get_payload(0).get_payload(decode=True).decode(errors='ignore')
-                    else:
-                        body = msg.get_payload(decode=True).decode(errors='ignore')
-                        
-                    print(f"Body:\n{body}")
+                    print(f"From: {msg['From']}")
+                    print(f"Subject: {msg['Subject']}")
+                    print(f"Body:\n{get_body(msg)}")
         else:
             print("No emails found.")
-        
-        print(messages)
         
         con.close()
         con.logout()
@@ -63,6 +59,6 @@ if __name__ == "__main__":
     email_password = os.getenv("RECIPIENT_PASSWORD")
     
     if fetch_latest_email(email_address, email_password):
-        print("Email fetching process completed.")
+        print("\nEmail fetching process completed.")
     else:
         print("Failed to fetch emails.")

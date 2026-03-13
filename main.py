@@ -1,24 +1,33 @@
 import tkinter as tk
 from tkinter import messagebox
 from send_email import send_email
-from receive_email import fetch_latest_email
+from receive_email import fetch_latest_email, get_connection
 from plyer import notification
 
 user_email = None
 user_password = None
 latest_email = None
+con = None
 
 def login():
-    global user_email, user_password, latest_email
-    if email_entry.get() and password_entry.get():
+    global user_email, user_password, latest_email, con
+    
+    email = email_entry.get()
+    password = password_entry.get()       
         
-        user_email = email_entry.get()
-        user_password = password_entry.get()        
-        latest_email = fetch_latest_email(user_email, user_password)
+    if email and password:
+        # attempt connection and login
+        con = get_connection(email, password)
         
-        # hide login window and open main dashboard
-        login_window.withdraw()
-        open_main_window()
+        if con:
+            user_email = email
+            user_password = password
+            latest_email = fetch_latest_email(con)
+            
+            login_window.withdraw()
+            open_main_window()
+        else:
+            messagebox.showerror("Login Failed", "Could not connect to server. Check credentials or IMAP settings.")
     else:
         messagebox.showwarning("Missing Information", "Please enter your email and password.")
 
@@ -38,7 +47,7 @@ def send():
 
 def receive():
     global latest_email
-    fetched_email = fetch_latest_email(user_email, user_password)
+    fetched_email = fetch_latest_email(con)
     if fetched_email:
         latest_email = fetched_email
         messagebox.showinfo("Latest Email", f"From: {latest_email['from']}\n\nSubject: {latest_email['subject']}\n\n{latest_email['body']}")
@@ -48,7 +57,7 @@ def receive():
 def poll_emails(window):
     global latest_email
     
-    current_email = fetch_latest_email(user_email, user_password)
+    current_email = fetch_latest_email(con)
     print("Checking for new emails NOW.")
     
     # check if a new email arrived by comparing with the stored one
@@ -75,7 +84,7 @@ def open_main_window():
     main_window.geometry("400x500")
     
     # close the entire app when secondary window is closed
-    main_window.protocol("WM_DELETE_WINDOW", login_window.destroy)
+    main_window.protocol("WM_DELETE_WINDOW", on_closing)
 
     # email sending form
     tk.Label(main_window, text="Recipient Email:").pack(pady=(10, 2), padx=10, anchor="w")
@@ -97,6 +106,15 @@ def open_main_window():
     receive_button.pack(pady=5, padx=10, anchor="w")
     
     poll_emails(main_window)
+
+def on_closing():
+    global con
+    if con:
+        try:
+            con.logout()
+        except:
+            pass
+    login_window.destroy()
 
 # login window
 login_window = tk.Tk() # first window to start with

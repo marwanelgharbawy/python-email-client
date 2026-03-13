@@ -12,45 +12,37 @@ def get_body(msg):
         body = msg.get_payload(decode=True).decode(errors='ignore')
     return body
 
-def fetch_latest_email(email_address, password):
-    try:   
-        # connect to IMAP server and login
-        # modify the server address depending on the recepient (ex: imap.yahoo.com)
+# stay connected by returning connection object
+def get_connection(email_address, password):
+    try:
         con = imaplib.IMAP4_SSL("imap.gmail.com")
         con.login(email_address, password)
         con.select("Inbox")
-        
-        print("Connected successfully to the email server.")
-        
+        return con
+    except Exception as e:
+        print(f"Connection failed: {e}")
+        return None
+
+def fetch_latest_email(con):
+    try:
         status, messages = con.search(None, 'ALL')
-        
-        # "messages" contain a list of email ids -> split to get ids
         mail_ids = messages[0].split()
         if mail_ids:
-            # get last email id and fetch the email using RFC822 protocol
             latest_id = mail_ids[-1]
             status, msg_data = con.fetch(latest_id, '(RFC822)')
             
             for response_part in msg_data:
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
-                    
-                    print(f"From: {msg['From']}")
-                    print(f"Subject: {msg['Subject']}")
-                    print(f"Body:\n{get_body(msg)}")
-                    
-                    # dictionary for GUI
-                    email_data = {
+                    return {
                         'from': msg['From'],
                         'subject': msg['Subject'],
                         'body': get_body(msg)
                     }
-        else:
-            print("No emails found.")
-        
-        con.close()
-        con.logout()
-        return email_data
+        return None
+    except Exception as e:
+        print(f"Error fetching: {e}")
+        return None
 
     except imaplib.IMAP4.error as e:
         print(f"IMAP Error: Authentication failed or server issue. {e}")

@@ -2,44 +2,70 @@ import tkinter as tk
 from tkinter import messagebox
 from send_email import send_email
 from receive_email import fetch_latest_email
+from plyer import notification
+
+user_email = None
+user_password = None
+latest_email = None
 
 def login():
-    global user_email, user_password
+    global user_email, user_password, latest_email
     if email_entry.get() and password_entry.get():
-        user_email = email_entry.get()
-        user_password = password_entry.get()
         
-        # Hide login window and open main dashboard
+        user_email = email_entry.get()
+        user_password = password_entry.get()        
+        latest_email = fetch_latest_email(user_email, user_password)
+        
+        # hide login window and open main dashboard
         login_window.withdraw()
         open_main_window()
     else:
         messagebox.showwarning("Missing Information", "Please enter your email and password.")
 
 def send():
-    if email_entry.get() and password_entry.get() and recipient_entry.get() and body_text.get("1.0", tk.END).strip():
-        
-        sender_email = email_entry.get()
-        sender_password = password_entry.get()
+    if recipient_entry.get() and body_text.get("1.0", tk.END).strip():
+        # form data
         recipient_email = recipient_entry.get()
         subject = subject_entry.get() if subject_entry.get() else "No Subject"
         body = body_text.get("1.0", tk.END).strip()
         
-        if send_email(sender_email, sender_password, recipient_email, subject, body):
+        if send_email(user_email, user_password, recipient_email, subject, body):
             messagebox.showinfo("Success", "Email sent successfully.")
         else:
-            messagebox.showerror("Error", "Failed to send email. Please check your credentials and try again.")
+            messagebox.showerror("Connection Error", "Failed to send email.")
     else:
         messagebox.showwarning("Missing Information", "Please fill all required fields.")
 
 def receive():
-    if email_entry.get() and password_entry.get():
-        latest_email = fetch_latest_email(email_entry.get(), password_entry.get())
-        if latest_email:
-            messagebox.showinfo("Latest Email", f"From: {latest_email['from']}\n\nSubject: {latest_email['subject']}\n\n{latest_email['body']}")
-        else:
-            messagebox.showerror("Error", "Failed to fetch latest email.")
+    global latest_email
+    fetched_email = fetch_latest_email(user_email, user_password)
+    if fetched_email:
+        latest_email = fetched_email
+        messagebox.showinfo("Latest Email", f"From: {latest_email['from']}\n\nSubject: {latest_email['subject']}\n\n{latest_email['body']}")
     else:
-        messagebox.showwarning("Missing Information", "Please enter your email and password to receive emails.")
+        messagebox.showerror("Error", "Failed to fetch latest email.")
+        
+def poll_emails(window):
+    global latest_email
+    
+    current_email = fetch_latest_email(user_email, user_password)
+    print("Checking for new emails NOW.")
+    
+    # check if a new email arrived by comparing with the stored one
+    if current_email and current_email != latest_email:
+        latest_email = current_email
+        
+        print("Notifying!")
+        
+        notification.notify(
+            title=f"New Email: {latest_email['subject']}",
+            message=f"From: {latest_email['from']}",
+            app_name="Email Client",
+            timeout=10
+        )
+        
+    # schedule this function to run again periodically
+    window.after(10000, lambda: poll_emails(window))
 
 def open_main_window():
     global recipient_entry, subject_entry, body_text
@@ -69,6 +95,8 @@ def open_main_window():
 
     receive_button = tk.Button(main_window, text="Receive Latest Email", command=receive)
     receive_button.pack(pady=5, padx=10, anchor="w")
+    
+    poll_emails(main_window)
 
 # login window
 login_window = tk.Tk() # first window to start with

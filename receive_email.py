@@ -13,9 +13,9 @@ def get_body(msg):
     return body
 
 # stay connected by returning connection object
-def get_connection(email_address, password):
+def get_connection(email_address, password, imap_server="imap.gmail.com"):
     try:
-        con = imaplib.IMAP4_SSL("imap.gmail.com")
+        con = imaplib.IMAP4_SSL(imap_server)
         con.login(email_address, password)
         con.select("Inbox")
         return con

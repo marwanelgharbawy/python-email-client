@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from dotenv import load_dotenv
 
 # function to send email, takes parameters from user
-def send_email(sender_email, sender_password, recipient_email, subject, body):
+def send_email(sender_email, sender_password, recipient_email, subject, body, smtp_server="smtp.gmail.com", smtp_port=587):
     
     # create main email object
     email = MIMEMultipart()
@@ -20,7 +20,7 @@ def send_email(sender_email, sender_password, recipient_email, subject, body):
     try:
         # create a session and connect to SMTP server
         # 587 port number is for Gmail
-        s = smtplib.SMTP('smtp.gmail.com', 587)
+        s = smtplib.SMTP(smtp_server, smtp_port)
         s.starttls()
         s.login(sender_email, sender_password)
         text = email.as_string()

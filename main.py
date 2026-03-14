@@ -5,25 +5,31 @@ from receive_email import fetch_latest_email, get_connection
 from plyer import notification
 import threading
 import time
+import os
+from dotenv import load_dotenv
 
 user_email = None
 user_password = None
 latest_email = None
 con = None
+smtp_server_address = None
 
 def login():
     global user_email, user_password, latest_email, con
     
     email = email_entry.get()
-    password = password_entry.get()       
+    password = password_entry.get()
+    imap_server = imap_entry.get()
+    smtp_server = smtp_entry.get()
         
     if email and password:
         # attempt connection and login
-        con = get_connection(email, password)
+        con = get_connection(email, password, imap_server)
         
         if con:
             user_email = email
             user_password = password
+            smtp_server_address = smtp_server
             latest_email = fetch_latest_email(con)
             
             login_window.withdraw()
@@ -40,7 +46,7 @@ def send():
         subject = subject_entry.get() if subject_entry.get() else "No Subject"
         body = body_text.get("1.0", tk.END).strip()
         
-        if send_email(user_email, user_password, recipient_email, subject, body):
+        if send_email(user_email, user_password, recipient_email, subject, body, smtp_server_address):
             messagebox.showinfo("Success", "Email sent successfully.")
         else:
             messagebox.showerror("Connection Error", "Failed to send email.")
@@ -128,15 +134,30 @@ def background_poll():
 # login window
 login_window = tk.Tk() # first window to start with
 login_window.title("Login")
-login_window.geometry("300x200")
+login_window.geometry("300x250")
 
-tk.Label(login_window, text="Email:").pack(pady=(20, 2), padx=10, anchor="w")
-email_entry = tk.Entry(login_window, width=35)
+tk.Label(login_window, text="Email:").pack(pady=(10, 2), padx=10, anchor="w")
+email_entry = tk.Entry(login_window, width=40)
 email_entry.pack(pady=2, padx=10, anchor="w")
 
 tk.Label(login_window, text="Password:").pack(pady=2, padx=10, anchor="w")
-password_entry = tk.Entry(login_window, width=35, show="*")
+password_entry = tk.Entry(login_window, width=40, show="*")
 password_entry.pack(pady=2, padx=10, anchor="w")
+
+tk.Label(login_window, text="IMAP Server:").pack(pady=2, padx=10, anchor="w")
+imap_entry = tk.Entry(login_window, width=40)
+imap_entry.pack(pady=2, padx=10, anchor="w")
+
+tk.Label(login_window, text="SMTP Server:").pack(pady=2, padx=10, anchor="w")
+smtp_entry = tk.Entry(login_window, width=40)
+smtp_entry.pack(pady=2, padx=10, anchor="w")
+
+load_dotenv()
+
+email_entry.insert(0, os.getenv("RECIPIENT_ADDRESS") or "")
+password_entry.insert(0, os.getenv("RECIPIENT_PASSWORD") or "")
+imap_entry.insert(0, "imap.gmail.com")
+smtp_entry.insert(0, "smtp.gmail.com")
 
 login_button = tk.Button(login_window, text="Login", command=login)
 login_button.pack(pady=15, padx=10, anchor="w")

@@ -55,28 +55,6 @@ def receive():
         messagebox.showinfo("Latest Email", f"From: {latest_email['from']}\n\nSubject: {latest_email['subject']}\n\n{latest_email['body']}")
     else:
         messagebox.showerror("Error", "Failed to fetch latest email.")
-        
-# def poll_emails(window):
-#     global latest_email
-    
-#     current_email = fetch_latest_email(con)
-#     print("Checking for new emails NOW.")
-    
-#     # check if a new email arrived by comparing with the stored one
-#     if current_email and current_email != latest_email:
-#         latest_email = current_email
-        
-#         print("Notifying!")
-        
-#         notification.notify(
-#             title=f"New Email: {latest_email['subject']}",
-#             message=f"From: {latest_email['from']}",
-#             app_name="Email Client",
-#             timeout=10
-#         )
-        
-#     # schedule this function to run again periodically
-#     window.after(10000, lambda: poll_emails(window))
 
 def open_main_window():
     global recipient_entry, subject_entry, body_text
